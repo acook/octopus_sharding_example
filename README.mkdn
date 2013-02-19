@@ -1,20 +1,30 @@
 Octopus Sharding Example
 ========================
 
-This is a sample rails application using sharding with Octopus. This application have the User information on master database, and all informations after login are stored in the shard, based on `country` attribute of the current_user. Available shards are: brazil, mexico and canada.
+This is a sample rails application using Octopus for sharding. 
+This application has the User information in master database, 
+and all other data is sharded on the `country` attribute of the `current_user`.
+
+Available shards are: brazil, mexico and canada.
 
 How-to
-------
+======
 
-Octopus is simple to use, just follow the steps:
+Octopus is simple to use, just follow these steps:
 
-- Add the gem to your Gemfile:
+Install Gem
+------------
+
+Add the gem to your Gemfile:
 
 ```ruby
 gem 'ar-octopus', '0.0.12', :require => "octopus"
 ```
 
-- Create a shards.yml file inside config directory, that looks like this:
+Create Shard Configuration
+--------------------------
+
+Create a shards.yml file inside config directory, it should have this structure:
 
 ```yaml
 development:
@@ -33,7 +43,13 @@ development:
       database: mexico_shard
 ```
 
-After this, you need to select what shard to use. This could be done with around_filter in controller, or setting the shard manually. This code in application_controller.rb that selects the shard:
+Shardify your Requests
+----------------------
+
+After this, you need to select which shard to use. 
+This could be done with around_filter in controller, or by setting the shard manually.
+
+This code in application_controller.rb selects the shard:
 
 ```ruby
 class ApplicationController < ActionController::Base
@@ -50,15 +66,22 @@ class ApplicationController < ActionController::Base
 end
 ```
 
-If the user isn't logged in, the shard will be the master. after this, it will pick the country attribute, passes to Octopus, and all queries will be sent to the selected shard. If you want to specify manually what shard to use, this is the syntax:
+If the user isn't logged in, the application will use the master shard. 
+Then, at login, it will take the country attribute, pass it to Octopus, 
+and all queries will be sent to the selected shard.
+
+If you want to specify manually what shard to use, you can use this syntax:
 
 ```ruby
 User.using(:brazil).all
+```
 
 ### Important!
 
+Each ActiveRecord object knows where the "source" shard is.
+If you want to move objects between shards, you need to specify what shard to send to.
 
-Each ActiveRecord object knows where is the source shard. if you want to move objects between shards, you need to specify what shard to sent, like this:
+You can do something like this:
 
 ```ruby
 # This will save the user in the brazil shard
@@ -72,7 +95,7 @@ new_user.attributes = @user.attributes
 new_user.save()
 ```
 
-More info could be found at [Octopus Wiki](http://wiki.github.com/tchandy/octopus/).
+More info can be found at [Octopus Wiki](http://wiki.github.com/tchandy/octopus/).
 
 Thanks
 ------
